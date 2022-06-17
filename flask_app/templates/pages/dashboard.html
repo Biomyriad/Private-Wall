@@ -1,0 +1,66 @@
+{% extends 'layouts/double_column_layout_members.html' %}
+
+{% block title %}Email Validation - Login{% endblock %}
+
+{% block left_column %}
+
+    <div class="panel rounded p-3 mt-3 mx-auto" style="height: min-content; min-width: 768px;">
+        <h4 class="text-center mt-1 mx-auto">Messages</h4>
+        <hr class="">
+        
+        <p class="text-center mt-1 mx-auto fw-bold"><span class="text-success">{{ messages | length }}</span> New Message(s)</p>
+
+        {% for message in messages %}
+        <div class="mb-2 p-2 bg-light border border-secondary rounded">
+            <div class="mb-0 d-flex justify-content-between">
+                <p class="mt-1 mb-0 fw-bold">{{ message.sender_name }} said: ({{message.created_at  | formatdatetime("%d %b %Y %I:%M %p") }})</p>
+                <a href="/delete_message/{{ message.id }}"><img src="{{ url_for('static', filename='images/trash_can_icon.svg') }}" alt="delete message" style="height: 20px;"></a>
+            </div>
+            <p class="mb-0 ps-2">
+                {{ message.message }}
+            </p>
+        </div>
+        {% endfor %}
+
+        <hr class="">
+    </div>
+
+{% endblock left_column %}
+
+{% block right_column %}
+
+    {% if get_flashed_messages(category_filter=['message_error']) %}
+        {% set message_error = get_flashed_messages(category_filter=['message_error']) %}
+    {% endif %}
+
+    <div class="panel rounded p-3 mt-3 mx-auto" style="height: min-content; min-width: 400px;">
+        <h4 class="text-center mt-1 mx-auto">Friends</h4>
+        <hr class="">
+        
+        <p class="text-center mt-1 mx-auto fw-bold">You have sent <span class="text-success">{{messages_sent}}</span> message(s) so far.</p>
+
+        {% for user in users if not user.id == session['logged_in']['id'] %}
+            <div>
+                <div class="mb-0 py-1 px-2 fw-bold border border-secondary rounded d-flex justify-content-between">
+                    <P class="mb-0">{{ user.first_name }} {{ user.last_name }}</P>
+                    <a href="#MessageCollapse{{ user.id }}" class="text-decoration-none text-primary" data-bs-toggle="collapse" role="button">Message</a>
+                </div>
+
+                <form action="/send_message" method="post" id="MessageCollapse{{ user.id }}" class='mb-2 p-2 border border-top-0 border-secondary rounded collapse {{ "" if message_error | get_validation_visibility("message" ~ user.id) == "hidden" else "show"}}'>
+                    <div class="">
+                        <textarea class="form-control" name="message"></textarea>
+                    </div>
+                    <input type="hidden" name="send_to" value="{{ user.id }}">
+                    <div class="mt-1 d-flex flex-row-reverse justify-content-between">
+                        <button type="submit" class="btn-sm btn-primary h-50" name="action" value="">Send</button> 
+                        <p class="validation" {{ message_error | get_validation_visibility("message" ~ user.id)}}>{{ message_error | get_validation_message("message" ~ user.id) }}</p>
+                    
+                    </div>
+                </form>
+            </div>
+        {% endfor %}
+        
+        <hr class="">
+    </div>
+
+{% endblock right_column %}
